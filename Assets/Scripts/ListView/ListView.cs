@@ -206,10 +206,9 @@ namespace Controls
             int startVisibleIndex = 0;
             int endVisibleIndex = 0;
 
-            var contentRectTransform = content.transform as RectTransform;
             var scrollOffset = new Vector2(
-                contentRectTransform.offsetMin.x,
-                contentRectTransform.offsetMax.y
+                content.offsetMin.x,
+                content.offsetMax.y
             );
 
             layout.GetCanvasSize(ref canvasSize);
