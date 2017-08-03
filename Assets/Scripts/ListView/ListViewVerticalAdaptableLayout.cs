@@ -41,15 +41,15 @@ namespace Controls
             var start = scrollOffset.y;
             var end = start + viewportSize.y;
 
-            var totalItems = dataSource.Count;
-            if (totalItems == 0) {
+            var dataCount = dataSource.Count;
+            if (dataCount == 0) {
                 firstIndex = -1;
                 lastIndex = -2;
 
                 return;
             }
 
-            for (int i = 0; i < totalItems; i++) {
+            for (int i = 0; i < dataCount; i++) {
                 if (itemsPositions[i] > start) {
                     break;
                 }
@@ -57,7 +57,7 @@ namespace Controls
                 firstIndex = i;
             }
 
-            for (int i = firstIndex; i < totalItems; i++) {
+            for (int i = firstIndex; i < dataCount; i++) {
                 lastIndex = i;
 
                 if (itemsPositions[i] > end) {
@@ -67,7 +67,7 @@ namespace Controls
         }
         #endregion
 
-        #region - Internal
+        #region - Private
         protected override void CalculateParameters()
         {
             canvasSize = new Vector2(viewportSize.x, 0);
@@ -91,20 +91,20 @@ namespace Controls
             for (int i = 0; i < dataCount - 1; i++) {
                 var data = dataSource.GetItem(i);
 
-                totalYSpace += getPreferredHeight(itemLayoutElement, data) + itemSpaceY;
+                totalYSpace += GetPreferredHeight(itemLayoutElement, data) + itemSpaceY;
 
                 itemsPositions.Add(totalYSpace);
             }
 
             var lastData = dataSource.GetItem(dataCount - 1);
-            totalYSpace += getPreferredHeight(itemLayoutElement, lastData) + padding.bottom;
+            totalYSpace += GetPreferredHeight(itemLayoutElement, lastData) + padding.bottom;
 
             itemsPositions.Add(totalYSpace);
 
             itemTemplate.gameObject.SetActive(false);
         }
 
-        float getPreferredHeight(ILayoutElement itemLayoutElement, ItemDataType data)
+        float GetPreferredHeight(ILayoutElement itemLayoutElement, ItemDataType data)
         {
             itemTemplate.SetData(data);
             itemLayoutElement.CalculateLayoutInputVertical();
