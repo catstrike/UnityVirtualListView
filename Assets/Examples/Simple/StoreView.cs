@@ -23,19 +23,19 @@ namespace Examples.Simple
         #endregion
 
         #region - Private
-        protected override void SetupItem(StoreItem item, StoreItemData data)
-        {
-            base.SetupItem(item, data);
+		protected override void SetupPoolItem(StoreItem item)
+		{
+			base.SetupPoolItem(item);
 
-            item.OnItemClick += () => {
-                SetSelectedItem(data);
-            };
+			item.OnItemClick += data => {
+				SetSelectedItem(data);
+			};
 
-            item.OnBuyClick += () => {
-                data.Purchased = true;
-                DataSource.Update();
-            };
-        }
+			item.OnBuyClick += data => {
+				data.Purchased = true;
+				DataSource.Update();
+			};
+		}
 
         void SetSelectedItem(StoreItemData data)
         {

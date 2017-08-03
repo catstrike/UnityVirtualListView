@@ -1,4 +1,5 @@
-﻿using Controls;
+﻿using System;
+using Controls;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -14,19 +15,20 @@ namespace Examples.Simple
         #endregion
 
         #region - Events
-        public event UnityAction OnBuyClick {
-            add { buyButton.onClick.AddListener(value); }
-            remove { buyButton.onClick.RemoveListener(value); }
+		public event UnityAction<StoreItemData> OnBuyClick {
+			add { buyButton.onClick.AddListener(() => value(data)); }
+			remove { throw new NotImplementedException(); }
         }
 
-        public event UnityAction OnItemClick {
-            add { thisButton.onClick.AddListener(value); }
-            remove { thisButton.onClick.RemoveListener(value); }
+		public event UnityAction<StoreItemData> OnItemClick {
+			add { thisButton.onClick.AddListener(() => value(data)); }
+			remove { throw new NotImplementedException(); }
         }
         #endregion
 
         #region - State
         Button thisButton;
+		StoreItemData data;
         #endregion
 
         #region - Lifecycle
@@ -39,16 +41,12 @@ namespace Examples.Simple
         #region - Public
         public override void SetData(StoreItemData data)
         {
+			this.data = data;
+
             buyButton.gameObject.SetActive(!data.Purchased);
 
             title.text = data.Title;
             buttonText.text = data.Price + " EUR";
-        }
-
-        public override void ResetItem()
-        {
-            buyButton.onClick.RemoveAllListeners();
-            thisButton.onClick.RemoveAllListeners();
         }
         #endregion
     }

@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
-using System;
 
 namespace Controls
 {
@@ -30,7 +30,7 @@ namespace Controls
     {
         Cell,
         Horizontal,
-        Vertical
+        VerticalAdaptable
     }
 
     public class ListView<ItemType, ItemDataType>: MonoBehaviour
@@ -39,7 +39,7 @@ namespace Controls
     {
         #region - UI Bindings
         [Header("Binding")]
-        [SerializeField] ItemType itemTemplate;
+		[SerializeField] protected ItemType itemTemplate;
         [SerializeField] ScrollRect scroll;
         [SerializeField] RectTransform content;
 
@@ -71,20 +71,25 @@ namespace Controls
         IListViewLayout layout;
         ListViewItemsPool<ItemType> itemsPool;
 
-        int lastVisibleFirstIndex;
-        int lastVisibleLastIndex;
+        int lastVisibleFirstIndex = -1;
+        int lastVisibleLastIndex = -1;
         #endregion
 
         #region - Lifecycle
         protected virtual void Awake()
         {
+			if (ItemSize.x != 0 || ItemSize.y != 0) {
+				itemTemplate.GetComponent<RectTransform>().sizeDelta = ItemSize;
+			}
+
             itemsPool = new ListViewItemsPool<ItemType>(itemTemplate);
-            itemsPool.SetupItem = SetupItem;
+            itemsPool.SetupItem = SetupPoolItem;
 
             scroll.onValueChanged.AddListener(OnScrollChangeHandler);
 
             content.anchorMax = new Vector2(0.0f, 1.0f);
             content.anchorMin = new Vector2(0.0f, 1.0f);
+			// change here to start filling top or bottom
             content.pivot = new Vector2(0.0f, 1.0f);
 
             contentRectTransform = content.transform as RectTransform;
@@ -110,9 +115,14 @@ namespace Controls
         #endregion
 
         #region - Overridable
-        protected virtual void SetupItem(ItemType item, ItemDataType data)
+        protected virtual void SetupPoolItem(ItemType item)
         {
+            var templateRectTransform = itemTemplate.GetComponent<RectTransform>();
+            var itemRectTransform = item.GetComponent<RectTransform>();
+            itemRectTransform.anchorMax = new Vector2(0.0f, 1.0f);
+            itemRectTransform.anchorMin = new Vector2(0.0f, 1.0f);
 
+            itemRectTransform.sizeDelta = templateRectTransform.sizeDelta;
         }
         #endregion
 
@@ -127,7 +137,9 @@ namespace Controls
                 case ListViewLayoutType.Horizontal:
                     result = new ListViewHorizontalLayout<ItemDataType>(dataSource);
                     break;
-                case ListViewLayoutType.Vertical:
+                case ListViewLayoutType.VerticalAdaptable:
+                    result = new ListViewVerticalAdaptableLayout<ItemType, ItemDataType>(dataSource, itemTemplate);
+                    break;
                 default:
                     throw new NotImplementedException();
             }
@@ -137,12 +149,13 @@ namespace Controls
 
         void UpdateLayout()
         {
-            var scrollRectTransfomr = scroll.transform as RectTransform;
             Canvas.ForceUpdateCanvases();
 
-            layout.ViewportSize = scrollRectTransfomr.rect.size;
-            layout.ItemSpacing = ItemSpacing;
+			var scrollRectTransform = scroll.transform as RectTransform;
+
             layout.Padding = Padding;
+            layout.ItemSpacing = ItemSpacing;
+            layout.ViewportSize = scrollRectTransform.rect.size;
         }
 
         void CleanMocks()
@@ -168,11 +181,12 @@ namespace Controls
                 return;
             }
 
-            dataSource.OnUpdate += RefreshData;
-
             layout = CreateLayout();
             layout.ItemSize = ItemSize;
-            UpdateLayout();
+			UpdateLayout();
+
+			//sub after layout subbed
+			dataSource.OnUpdate += RefreshData;
 
             RefreshData();
             ScrollPosition = new Vector2(0, 0);
@@ -183,22 +197,6 @@ namespace Controls
             UpdateItems(forceUpdate: true);
         }
 
-        void SetupItem(ItemType item)
-        {
-            var templateRectTransform = itemTemplate.GetComponent<RectTransform>();
-            var itemRectTransform = item.GetComponent<RectTransform>();
-            itemRectTransform.anchorMax = new Vector2(0.0f, 1.0f);
-            itemRectTransform.anchorMin = new Vector2(0.0f, 1.0f);
-
-            if (ItemSize.x == 0 && ItemSize.y == 0) {
-                itemRectTransform.sizeDelta = templateRectTransform.sizeDelta;
-            } else {
-                itemRectTransform.sizeDelta = ItemSize;
-            }
-
-            itemRectTransform.sizeDelta = ItemSize;
-        }
-
         void UpdateItems(bool forceUpdate)
         {
             var canvasSize = Vector2.zero;
@@ -207,8 +205,8 @@ namespace Controls
             int endVisibleIndex = 0;
 
             var scrollOffset = new Vector2(
-                content.offsetMin.x,
-                content.offsetMax.y
+                contentRectTransform.offsetMin.x,
+                contentRectTransform.offsetMax.y
             );
 
             layout.GetCanvasSize(ref canvasSize);
@@ -233,7 +231,6 @@ namespace Controls
 
             for (var i = startVisibleIndex; i <= endVisibleIndex; i += 1) {
                 var itemData = dataSource.GetItem(i);
-
                 var item = itemsPool.GetItem();
 
                 var itemTransform = item.transform as RectTransform;
@@ -244,9 +241,7 @@ namespace Controls
                 itemPosition.x += itemOffset.x;
                 itemTransform.anchoredPosition = itemPosition;
 
-                item.ResetItem();
                 item.SetData(itemData);
-                SetupItem(item, itemData);
             }
 
             itemsPool.EndBatch();
