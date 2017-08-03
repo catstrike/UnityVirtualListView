@@ -11,9 +11,9 @@ namespace Controls
         #endregion
 
         #region - State
-        ItemType template;
-        Stack<ItemType> itemsStack = new Stack<ItemType>();
-        List<ItemType> activeItems = new List<ItemType>();
+        readonly ItemType template;
+        readonly Stack<ItemType> itemsStack = new Stack<ItemType>();
+        readonly List<ItemType> activeItems = new List<ItemType>();
 
         bool batchMode;
         #endregion

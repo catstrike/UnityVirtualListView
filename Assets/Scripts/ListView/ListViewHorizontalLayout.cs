@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
+using UnityEngine;
 
 namespace Controls
 {
@@ -44,7 +44,9 @@ namespace Controls
                 Mathf.CeilToInt((ViewportSize.x - offset) / itemAndSpaceWidth)
             ) - 1;
         }
+        #endregion
 
+        #region - Private
         protected override void CalculateParameters()
         {
             canvasSize = new Vector2(0, viewportSize.y);

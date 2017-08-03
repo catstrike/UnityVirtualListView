@@ -6,9 +6,6 @@ namespace Controls
     {
         #region - Public
         public abstract void SetData(DataType data);
-        public virtual void ResetItem()
-        {
-        }
         #endregion
     }
 }
